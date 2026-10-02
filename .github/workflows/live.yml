@@ -12,18 +12,19 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Install FFmpeg
+      - name: Install FFmpeg & wget
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg
+          sudo apt-get install -y ffmpeg wget
+
+      - name: Download Video
+        run: |
+          wget -O input.mp4 "https://www.dropbox.com/scl/fi/yfqyo3hna92agfn66tk6x/lv_0_20261002152304.mp4?rlkey=0jtqepfb45omz9n2jz5y0vihy&st=tn39f0dx&dl=1"
 
       - name: Convert Video to HLS Live Stream
         run: |
           mkdir -p live
-          ffmpeg -re -stream_loop -1 -i "https://www.dropbox.com/scl/fi/yfqyo3hna92agfn66tk6x/lv_0_20261002152304.mp4?rlkey=0jtqepfb45omz9n2jz5y0vihy&st=tn39f0dx&dl=1" \
-          -c:v copy -c:a copy \
-          -f hls -hls_time 6 -hls_list_size 10 -hls_flags delete_segments \
-          live/stream.m3u8
+          ffmpeg -i input.mp4 -c copy -bsf:v h264_mp4toannexb -f hls -hls_time 6 -hls_list_size 0 live/stream.m3u8
 
       - name: Deploy Stream to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
