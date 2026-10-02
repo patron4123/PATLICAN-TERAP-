@@ -1,0 +1,32 @@
+name: IPTV Live Stream
+
+on:
+  schedule:
+    - cron: '0 */5 * * *'
+  workflow_dispatch:
+
+jobs:
+  stream:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install FFmpeg
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+
+      - name: Convert Video to HLS Live Stream
+        run: |
+          mkdir -p live
+          ffmpeg -re -stream_loop -1 -i "https://www.dropbox.com/scl/fi/yfqyo3hna92agfn66tk6x/lv_0_20261002152304.mp4?rlkey=0jtqepfb45omz9n2jz5y0vihy&st=tn39f0dx&dl=1" \
+          -c:v copy -c:a copy \
+          -f hls -hls_time 6 -hls_list_size 10 -hls_flags delete_segments \
+          live/stream.m3u8
+
+      - name: Deploy Stream to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./live
